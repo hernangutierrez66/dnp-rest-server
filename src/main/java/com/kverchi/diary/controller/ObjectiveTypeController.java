@@ -31,10 +31,10 @@ public class ObjectiveTypeController {
         this.hierarchyTypeRepository = hierarchyTypeRepository;
     }
 
-    /*@GetMapping(value = "/all")
+    @GetMapping(value = "/all")
     public ResponseEntity listObjectiveType() {
         return ResponseEntity.status(HttpStatus.OK).body(objectiveTypeRepository.findAll());
-    }*/
+    }
 
     @PostMapping(value = "/create")
     public ResponseEntity createObjectiveType(@Valid @RequestBody Map<String, String> input) {

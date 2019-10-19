@@ -55,7 +55,8 @@ public class HierarchyTypeController extends ValidatedController {
 
     @GetMapping(value = "/{id}")
     public ResponseEntity getHierarchyType(@PathVariable(value = "id") Integer id) {
-        return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findById(id));
+       // return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findById(id));
+        return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findByState(id));
     }
 
     @PutMapping(value = "/update/{id}")

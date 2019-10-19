@@ -1,11 +1,14 @@
 package com.kverchi.diary.model.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.*;
 
+@Data
 @Entity
 @Table(name = "roles")
 public class Role implements Serializable {
@@ -14,13 +17,8 @@ public class Role implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name = "role_id")
-	private int roleId;
-	public int getRoleId() {
-		return roleId;
-	}
-	public void setRoleId(int roleId) {
-		this.roleId = roleId;
-	}
+	private Long roleId;
+
 	@Column(name = "role")
 	private String role;
 	public String getRole() {
@@ -38,6 +36,14 @@ public class Role implements Serializable {
 			inverseJoinColumns = {@JoinColumn(name = "privilege_id")}
 	)
 	private List<Privilege> privileges;
+
+	public Role() {
+		super();
+	}
+
+	public Role(String role) {
+		this.role = role;
+	}
 
 	public List<Privilege> getPrivileges() {
 		return privileges;

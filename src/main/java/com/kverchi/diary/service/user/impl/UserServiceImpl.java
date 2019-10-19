@@ -1,15 +1,11 @@
 package com.kverchi.diary.service.user.impl;
 
 import com.kverchi.diary.model.Email;
-import com.kverchi.diary.model.entity.PasswordResetToken;
-import com.kverchi.diary.model.entity.User;
-import com.kverchi.diary.model.entity.VerificationToken;
-import com.kverchi.diary.repository.PasswordResetTokenRepository;
-import com.kverchi.diary.repository.VerificationTokenRepository;
+import com.kverchi.diary.model.entity.*;
+import com.kverchi.diary.repository.*;
 import com.kverchi.diary.service.email.EmailService;
 import com.kverchi.diary.service.email.impl.EmailTemplate;
 import com.kverchi.diary.model.form.RegistrationForm;
-import com.kverchi.diary.repository.UserRepository;
 import com.kverchi.diary.service.email.EmailMessagingProducerService;
 import com.kverchi.diary.service.security.SecurityService;
 import com.kverchi.diary.service.user.UserService;
@@ -32,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 
@@ -69,6 +67,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordResetTokenRepository passwordTokenRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private MunicipalityRepository municipalityRepository;
 
 
 
@@ -112,15 +116,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ServiceResponse register(RegistrationForm form) {
+    public ServiceResponse register(Map<String, String> body) {
         ServiceResponse response = new ServiceResponse();
-        if(!form.getPassword().equals(form.getMatchingPassword())) {
+        if(!body.get("password").equals(body.get("matchingPassword"))) {
             response.setResponseMessage(MsgServiceResponse.NEW_PASSWORD_MISMATCHED);
             response.setResponseCode(HttpStatus.BAD_REQUEST);
             return response;
         }
 
-        User user = form.toUser(bCryptPasswordEncoder);
+
+        Role role = roleRepository.findByRole(body.get("role"));
+
+        Optional<Municipality> optionalMunicipality =  municipalityRepository.findById(Integer.parseInt(body.get("municipio_id")));
+
+        User user = new User(body.get("username"), body.get("password"), false, body.get("email"), ZonedDateTime.now(),  Arrays.asList(role), optionalMunicipality.get());
+
+                //form.toUser(bCryptPasswordEncoder);
         if(userRepository.findByUsername(user.getUsername()) != null) {
             response.setResponseMessage(MsgServiceResponse.USER_USERNAME_ALREADY_EXIST);
             response.setResponseCode(HttpStatus.BAD_REQUEST);
@@ -131,6 +142,7 @@ public class UserServiceImpl implements UserService {
             response.setResponseCode(HttpStatus.BAD_REQUEST);
             return response;
         }
+
         userRepository.save(user);
 
         try {

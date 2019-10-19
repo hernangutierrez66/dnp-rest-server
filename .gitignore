@@ -1,3 +1,4 @@
 target
 .idea
 travel-diary.iml
+src/main/resources/templates/**

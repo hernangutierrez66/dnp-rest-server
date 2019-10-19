@@ -1,9 +1,12 @@
 package com.kverchi.diary.model.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name = "privileges")
 public class Privilege {

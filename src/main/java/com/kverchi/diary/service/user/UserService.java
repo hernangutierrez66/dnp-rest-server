@@ -8,12 +8,13 @@ import com.kverchi.diary.model.form.RegistrationForm;
 import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
 	ServiceResponse login(User requestUser);
 	ServiceResponse logout();
 	List<User> findAll();
-	ServiceResponse register(RegistrationForm form);
+	ServiceResponse register(Map<String, String> body);
 	void activateAccount(User user);
 	boolean updatePassword(User user);
 	boolean createAndSendResetPasswordToken(String email);

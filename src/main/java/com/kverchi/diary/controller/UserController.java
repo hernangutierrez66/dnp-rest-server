@@ -54,8 +54,8 @@ public class UserController {
     }
     @PostMapping(value = "/register")
     @ResponseBody
-    public ServiceResponse processRegistration(@RequestBody RegistrationForm form) {
-        ServiceResponse response = userService.register(form);
+    public ServiceResponse processRegistration(@RequestBody Map<String, String> body) {
+        ServiceResponse response = userService.register(body);
         return response;
     }
 

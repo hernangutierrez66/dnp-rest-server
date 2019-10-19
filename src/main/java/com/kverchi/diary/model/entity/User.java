@@ -12,9 +12,11 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 
 @Entity
 @Table(name="users")
@@ -29,7 +31,7 @@ public class User implements Serializable, UserDetails {
     private boolean isEnabled;
     private String email;
 	private String information;
-	@Column(name = "registration_date", insertable=false)
+	@Column(name = "registration_date", insertable=true)
 	private ZonedDateTime registrationDate;
 
 
@@ -46,12 +48,23 @@ public class User implements Serializable, UserDetails {
 	private Municipality municipality;
 
 
-    public User() {}
+    public User() {super();}
 	public User(String username, String password, String email) {
 		this.username = username;
 		this.password = password;
 		this.email = email;
 	}
+
+	public User(String username, String password, boolean isEnabled, String email, ZonedDateTime registrationDate, Collection<Role> roles, Municipality municipality) {
+		this.username = username;
+		this.password = password;
+		this.isEnabled = isEnabled;
+		this.email = email;
+		this.registrationDate = registrationDate;
+		this.roles = roles;
+		this.municipality = municipality;
+	}
+
 	public User(int userId) {
 		this.userId = userId;
 	}
@@ -82,6 +95,14 @@ public class User implements Serializable, UserDetails {
 
 	public void setUsername(String username) {
 		this.username = username;
+	}
+
+	public Municipality getMunicipality() {
+		return municipality;
+	}
+
+	public void setMunicipality(Municipality municipality) {
+		this.municipality = municipality;
 	}
 
 	@JsonIgnore

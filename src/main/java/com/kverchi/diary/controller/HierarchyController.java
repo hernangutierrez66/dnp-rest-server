@@ -58,7 +58,8 @@ public class HierarchyController extends ValidatedController {
 
     @GetMapping(value = "/all")
     public ResponseEntity getAllHierarchies() {
-        return ResponseEntity.status(HttpStatus.OK).body(repository.findByType(hierarchyTypeRepository.getOne(1)));
+       return ResponseEntity.status(HttpStatus.OK).body(repository.findByType(hierarchyTypeRepository.getOne(1)));
+        //return ResponseEntity.status(HttpStatus.OK).body(repository.findAll());
     }
 
     @GetMapping(value = "/route/{id}")

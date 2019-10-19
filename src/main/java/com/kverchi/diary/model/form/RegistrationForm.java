@@ -23,6 +23,7 @@ public class RegistrationForm {
 		this.email = email;
 	}
 
+
 	public User toUser(PasswordEncoder passwordEncoder) {
 		return new User(username, passwordEncoder.encode(password), email);
 	}
