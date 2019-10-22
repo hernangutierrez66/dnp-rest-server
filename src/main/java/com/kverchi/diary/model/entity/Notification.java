@@ -28,6 +28,9 @@ public class Notification extends NamedEntityModel implements Serializable {
     @Column(name = "observation")
     private String observation;
 
+    @Column(name = "aditional_information")
+    private String aditionalInformation;
+
     @Column(name = "city")
     private int city;
 
@@ -49,6 +52,9 @@ public class Notification extends NamedEntityModel implements Serializable {
     @Column(name = "end_date")
     private Date endDate;
 
+    @Column(name = "notify_control_boss")
+    private boolean notifyControlBoss;
+
     @Column(name = "created_at")
     @CreatedDate
     private Date created_at;
@@ -57,10 +63,11 @@ public class Notification extends NamedEntityModel implements Serializable {
     @LastModifiedDate
     private Date updated_at;
 
-    public Notification(String name, int userId, String observation, int city, int registerId, String tableName, int state_change, int state, Date startDate, Date endDate) {
+    public Notification(String name, int userId, String observation, String aditionalInformation, int city, int registerId, String tableName, int state_change, int state, Date startDate, Date endDate, boolean notifyControlBoss) {
         this.name = name;
         this.userId = userId;
         this.observation = observation;
+        this.aditionalInformation = aditionalInformation;
         this.city = city;
         this.registerId = registerId;
         this.tableName = tableName;
@@ -68,5 +75,6 @@ public class Notification extends NamedEntityModel implements Serializable {
         this.state = state;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.notifyControlBoss = notifyControlBoss;
     }
 }

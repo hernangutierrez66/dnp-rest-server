@@ -14,15 +14,15 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 public class AttributeDefinitionObjectiveType extends EntityModel implements Serializable {
 
-    @Unique
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atributo_definicionid")
-    private AttributeDefinition attributeDefinition;
 
-    @Unique
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tipo_objetivoid")
     private ObjectiveType objectiveType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atributo_definicionid")
+    private AttributeDefinition attributeDefinition;
 
 
     @Column(name = "state")

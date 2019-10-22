@@ -28,6 +28,8 @@ public class ObjectiveType extends NamedEntityModel implements Serializable {
     )
     private List<HierarchyType> hierarchyTypes;
 
+
+
     @Column(name = "state")
     private int state;
 

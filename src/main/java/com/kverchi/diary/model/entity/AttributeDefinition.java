@@ -5,11 +5,11 @@ package com.kverchi.diary.model.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name="atributo_definicion")
@@ -25,4 +25,13 @@ public class AttributeDefinition extends NamedEntityModel implements Serializabl
 
     @Column(name = "state")
     private int state;
+
+
+
+    public AttributeDefinition(String name, String description, int type, int state) {
+        this.name = name;
+        this.description = description;
+        this.type = type;
+        this.state = state;
+    }
 }

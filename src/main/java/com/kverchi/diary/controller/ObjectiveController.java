@@ -104,8 +104,125 @@ public class ObjectiveController{
         Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), 1, ZonedDateTime.now());
         annexesRepository.save(annexes);
 
-        Notification notification = new Notification("nombre justificacion", user.getUserId(), input.get("justification"), city, objective.getId(), "Contrato", 3,1, Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
+        Notification notification = new Notification("nombre justificacion", user.getUserId(), input.get("justification"), input.get("aditional_information"), city, objective.getId(), "Contrato", Integer.parseInt(input.get("state_change")),1, Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), false);
         notificationRepository.save(notification);
+        return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "/{id}/contract-state")
+    public ResponseEntity suspendContract(@RequestBody Map<String,String> input, @PathVariable(value = "id") Integer id) throws ParseException {
+        if (input == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
+
+        if (input.get("state_change") == "")  return HierarchyController.customMessage("El nuevo estado de contrato es requerido", HttpStatus.BAD_REQUEST);
+        Optional<Objective> objectiveOptional = repository.findById(id);
+        Objective objective = objectiveOptional.get();
+        if (input.get("state_change") == "2"){ //contrato suspendido temporalmente
+            if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+
+
+            if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+            objective.setState(2);
+            objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
+            objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
+            repository.save(objective);
+            TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, Integer.parseInt(input.get("newValue")), ZonedDateTime.now(), 1, null, null);
+            traceChangeValueRepository.save(traceChangeValue);
+            Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), 1, ZonedDateTime.now());
+            annexesRepository.save(annexes);
+        }
+
+        if (input.get("state_change") == "3"){ //contrato suspendido permanente
+            // if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+
+            if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+            objective.setState(3);
+            repository.save(objective);
+            TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, objective.getActualValue(), ZonedDateTime.now(), 1, null, null);
+            traceChangeValueRepository.save(traceChangeValue);
+            Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(ZonedDateTime.now().toString()), Hierarchy.DATE_FORMAT.parse("0000-00-00"), 1, ZonedDateTime.now());
+            annexesRepository.save(annexes);
+        }
+
+        if (input.get("state_change") == "1"){ //reinicio de contrato
+            if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+
+
+            if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+            objective.setState(1);
+            objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
+            objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
+            repository.save(objective);
+            TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, Integer.parseInt(input.get("newValue")), ZonedDateTime.now(), 1, null, null);
+            traceChangeValueRepository.save(traceChangeValue);
+            Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), 1, ZonedDateTime.now());
+            annexesRepository.save(annexes);
+            //objeto de atributo valor
+        }
+
+        if (input.get("state_change") == "0"){ //eliminacion de contrato
+            //if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+
+
+            if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+            objective.setState(0);
+            //objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
+            //objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
+            repository.save(objective);
+            TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, objective.getActualValue(), ZonedDateTime.now(), 1, null, null);
+            traceChangeValueRepository.save(traceChangeValue);
+            Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse("0000-00-00"), Hierarchy.DATE_FORMAT.parse("0000-00-00"), 1, ZonedDateTime.now());
+            annexesRepository.save(annexes);
+            //objeto de atributo valor
+        }
+
+        Optional<Notification> optionalNotification = notificationRepository.findById(Integer.parseInt(input.get("notification_id")));
+        Notification notification = optionalNotification.get();
+
+        notification.setState(0);
+        notificationRepository.save(notification);
+
+        return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
+    }
+
+    @PatchMapping(value = "/{id}/deny")
+    public ResponseEntity denyDelete(@RequestBody Map<String,String> input, @PathVariable(value = "id") Integer id) throws ParseException {
+        if (input == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
+
+       // if (input.get("notify_control_boss") == "")  return HierarchyController.customMessage("El nuevo estado de contrato es requerido", HttpStatus.BAD_REQUEST);
+        Optional<Objective> objectiveOptional = repository.findById(id);
+        Objective objective = objectiveOptional.get();
+
+
+       // if (input.get("notify_control_boss") != "0"){ //rechazo de eliminacion de contrato
+            if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+            User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+            if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+            int city = 0;
+            if (user.getMunicipality() != null){
+                city = user.getMunicipality().getId();
+            }
+
+            if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
+
+            objective.setState(1);
+            objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
+            objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
+            repository.save(objective);
+
+            Notification notification = new Notification("-", user.getUserId(), input.get("justification"), input.get("aditional_information"), city, objective.getId(), "Contrato", 1,1, Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), true);
+            notificationRepository.save(notification);
+       // }
+
+        Optional<Notification> optionalNotification1 = notificationRepository.findById(Integer.parseInt(input.get("notification_id")));
+        Notification notification1 = optionalNotification1.get();
+
+        notification.setState(0);
+        notificationRepository.save(notification1);
+
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
