@@ -33,10 +33,22 @@ public class ObjectiveController{
 
     private final MunicipalityRepository municipalityRepository;
 
+    private final AttributeDefinitionRepository attributeDefinitionRepository;
+
+    private final AttributeDefinitionObjectiveTypeRepository attributeDefinitionObjectiveTypeRepository;
+
+    private final ObjectiveTypeRepository objectiveTypeRepository;
+
+    private final AttributeValueRepository attributeValueRepository;
+
     @Autowired
     public ObjectiveController(ObjectiveRepository repository, HierarchyRepository hierarchyRepository,
                                TraceChangeValueRepository traceChangeValueRepository, AnnexesRepository annexesRepository,
-                               NotificationRepository notificationRepository, UserRepository userRepository, MunicipalityRepository municipalityRepository) {
+                               NotificationRepository notificationRepository, UserRepository userRepository,
+                               MunicipalityRepository municipalityRepository,
+                               AttributeDefinitionRepository attributeDefinitionRepository,
+                               AttributeDefinitionObjectiveTypeRepository attributeDefinitionObjectiveTypeRepository,
+                               ObjectiveTypeRepository objectiveTypeRepository, AttributeValueRepository attributeValueRepository) {
         this.repository = repository;
         this.hierarchyRepository = hierarchyRepository;
         this.traceChangeValueRepository = traceChangeValueRepository;
@@ -44,6 +56,10 @@ public class ObjectiveController{
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.municipalityRepository = municipalityRepository;
+        this.attributeDefinitionRepository = attributeDefinitionRepository;
+        this.attributeDefinitionObjectiveTypeRepository = attributeDefinitionObjectiveTypeRepository;
+        this.objectiveTypeRepository = objectiveTypeRepository;
+        this.attributeValueRepository = attributeValueRepository;
     }
 
     @GetMapping(value = "/{id}")
@@ -159,6 +175,14 @@ public class ObjectiveController{
             traceChangeValueRepository.save(traceChangeValue);
             Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), 1, ZonedDateTime.now());
             annexesRepository.save(annexes);
+            if (input.get("atributo_definicion_tipo_objetivoid")!= null){
+                Optional<AttributeDefinitionObjectiveType> optionalAttributeDefinitionObjectiveType = attributeDefinitionObjectiveTypeRepository.findById(Integer.parseInt(input.get("atributo_definicion_tipo_objetivoid")));
+                if (optionalAttributeDefinitionObjectiveType.isPresent()) return HierarchyController.customMessage("Definicion de atributo y tipo de objetivo inexistente", HttpStatus.BAD_REQUEST);
+                AttributeValue attributeValue = new AttributeValue();
+                attributeValue.setObjective(objective);
+                attributeValue.setAttributeDefinitionObjectiveType(optionalAttributeDefinitionObjectiveType.get());
+                attributeValueRepository.save(attributeValue);
+            }
             //objeto de atributo valor
         }
 
@@ -226,6 +250,54 @@ public class ObjectiveController{
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
+    @PostMapping(value = "/create/attribute")
+    public ResponseEntity createAttributeDefinition(@Valid @RequestBody Map<String,String> input) {
+        if (input.get("nombre") == null || input.get("descripcion") == null || input.get("tipo") == null) return HierarchyController.customMessage("Nombre, descripcion y tipo son requeridos", HttpStatus.BAD_REQUEST);
+
+        AttributeDefinition attributeDefinition = new AttributeDefinition(input.get("nombre"), input.get("descripcion"), Integer.parseInt(input.get("tipo")), 1);
+        attributeDefinitionRepository.save(attributeDefinition);
+
+        return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/attribute/all")
+    public ResponseEntity getAllAttribute(){
+        return ResponseEntity.status(HttpStatus.OK).body(attributeDefinitionRepository.findAll());
+    }
+
+    @GetMapping(value = "/{id}/attribute")
+    public ResponseEntity getAttribute(@PathVariable(value = "id") Integer id) {
+        // return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findById(id));
+        return ResponseEntity.status(HttpStatus.OK).body(attributeDefinitionRepository.findById(id));
+    }
+
+    @PostMapping(value = "/create/attributeObjectiveType")
+    public ResponseEntity createAttributeDefinitionObjectiveType(@Valid @RequestBody Map<String,String> input) {
+        if (input.get("atributo_definitionid") == null || input.get("tipo_objetivoid") == null) return HierarchyController.customMessage("Id de tipo de objetivo y definicion de atributo requerido", HttpStatus.BAD_REQUEST);
+
+        Optional<AttributeDefinition> optionalAttributeDefinition = attributeDefinitionRepository.findById(Integer.parseInt(input.get("atributo_definitionid")));
+        Optional<ObjectiveType> optionalObjectiveType = objectiveTypeRepository.findById(Integer.parseInt(input.get("tipo_objetivoid")));
+        if (optionalObjectiveType.isPresent()) return HierarchyController.customMessage("Tipo de objetivo no existe", HttpStatus.BAD_REQUEST);
+        if (optionalAttributeDefinition.isPresent()) return HierarchyController.customMessage("Definicion de atributo no existe", HttpStatus.BAD_REQUEST);
+        AttributeDefinitionObjectiveType attributeDefinitionObjectiveType = new AttributeDefinitionObjectiveType();
+        attributeDefinitionObjectiveType.setState(1);
+        attributeDefinitionObjectiveType.setAttributeDefinition(optionalAttributeDefinition.get());
+        attributeDefinitionObjectiveType.setObjectiveType(optionalObjectiveType.get());
+        attributeDefinitionObjectiveTypeRepository.save(attributeDefinitionObjectiveType);
+
+        return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/attributeObjectiveType/all")
+    public ResponseEntity getAllAttributeObjectiveType(){
+        return ResponseEntity.status(HttpStatus.OK).body(attributeDefinitionObjectiveTypeRepository.findAll());
+    }
+
+    @GetMapping(value = "/{id}/attributeObjectiveType")
+    public ResponseEntity getAttributeObjectiveType(@PathVariable(value = "id") Integer id) {
+
+        return ResponseEntity.status(HttpStatus.OK).body(attributeDefinitionObjectiveTypeRepository.findById(id));
+    }
 
 
 }

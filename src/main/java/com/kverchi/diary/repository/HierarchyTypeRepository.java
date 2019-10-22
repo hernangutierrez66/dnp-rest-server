@@ -18,4 +18,5 @@ public interface HierarchyTypeRepository extends JpaRepository<HierarchyType, In
 
 
     List<HierarchyType> findByState(int state);
+    List<HierarchyType> findByMunicipality(int city);
 }

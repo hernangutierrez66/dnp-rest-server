@@ -59,6 +59,12 @@ public class HierarchyTypeController extends ValidatedController {
         return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findByState(id));
     }
 
+    @GetMapping(value = "/city/{id}")
+    public ResponseEntity getHierarchyTypeByCity(@PathVariable(value = "id") Integer id) {
+        // return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findById(id));
+        return ResponseEntity.status(HttpStatus.OK).body(hierarchyTypeRepository.findByMunicipality(id));
+    }
+
     @PutMapping(value = "/update/{id}")
     public ResponseEntity updateHierarchyType(@RequestBody HierarchyType hierarchyType, @PathVariable(value = "id") Integer id) throws ParseException {
         if (hierarchyType == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
