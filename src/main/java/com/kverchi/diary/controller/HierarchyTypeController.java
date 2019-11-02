@@ -42,11 +42,14 @@ public class HierarchyTypeController extends ValidatedController {
     @PostMapping(value = "/create")
     public ResponseEntity createHierarchyType(@Valid @RequestBody Map<String, String> input) {
 
-        if (input.get("name").isEmpty() || input.get("municipio_id").isEmpty() || input.get("tipo_jerarquia_id").isEmpty() || input.get("tipo_responsableid").isEmpty()) return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        if (input.get("name").isEmpty() || input.get("municipio_id").isEmpty() ||  input.get("tipo_responsableid").isEmpty()) return new ResponseEntity(HttpStatus.BAD_REQUEST);
         HierarchyType hierarchyType = new HierarchyType();
         hierarchyType.setName(input.get("name"));
         hierarchyType.setMunicipality(municipalityRepository.getOne(Integer.parseInt(input.get("municipio_id"))));
-        hierarchyType.setType(hierarchyTypeRepository.getOne(Integer.parseInt(input.get("tipo_jerarquia_id"))));
+        if (!input.get("tipo_jerarquia_id").isEmpty()){
+            hierarchyType.setType(hierarchyTypeRepository.getOne(Integer.parseInt(input.get("tipo_jerarquia_id"))));
+        }
+        hierarchyType.setState(1);
         hierarchyType.setResponsibleType(responsibleTypeRepository.getOne(Integer.parseInt(input.get("tipo_responsableid"))));
         hierarchyTypeRepository.save(hierarchyType);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);

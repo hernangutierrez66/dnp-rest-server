@@ -63,6 +63,10 @@ public class Notification extends NamedEntityModel implements Serializable {
     @LastModifiedDate
     private Date updated_at;
 
+    public Notification() {
+        super();
+    }
+
     public Notification(String name, int userId, String observation, String aditionalInformation, int city, int registerId, String tableName, int state_change, int state, Date startDate, Date endDate, boolean notifyControlBoss) {
         this.name = name;
         this.userId = userId;

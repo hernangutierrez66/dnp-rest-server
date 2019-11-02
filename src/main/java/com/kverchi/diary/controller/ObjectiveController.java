@@ -67,6 +67,11 @@ public class ObjectiveController{
         return ResponseEntity.status(HttpStatus.OK).body(repository.findById(id));
     }
 
+    @GetMapping(value = "/all")
+    public ResponseEntity getAllObjectives() {
+        return ResponseEntity.status(HttpStatus.OK).body(repository.findAll());
+    }
+
     @PostMapping()
     public ResponseEntity createObjective(@Valid @RequestBody Objective objective, @RequestParam(required = false) Integer parentId) {
         if (objective == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
@@ -107,11 +112,13 @@ public class ObjectiveController{
             city = user.getMunicipality().getId();
         }
 
+        int userid = user.getUserId();
+
         Optional<Objective> objectiveOptional = repository.findById(id);
         if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
         Objective objective = objectiveOptional.get();
         objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("newDate")));
-        objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
+        //objective.setDescription(objective.getDescription()+"\n"+input.get("justification"));
         repository.save(objective);
         TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, Integer.parseInt(input.get("newValue")), ZonedDateTime.now(), 1, null, null);
         traceChangeValueRepository.save(traceChangeValue);
@@ -120,7 +127,18 @@ public class ObjectiveController{
         Annexes annexes = new Annexes(traceChangeValue, input.get("justification"), Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), 1, ZonedDateTime.now());
         annexesRepository.save(annexes);
 
-        Notification notification = new Notification("nombre justificacion", user.getUserId(), input.get("justification"), input.get("aditional_information"), city, objective.getId(), "Contrato", Integer.parseInt(input.get("state_change")),1, Hierarchy.DATE_FORMAT.parse(input.get("startDate")), Hierarchy.DATE_FORMAT.parse(input.get("newDate")), false);
+        Notification notification = new Notification("nombre justificacion",
+                userid,
+                input.get("justification"),
+                input.get("aditional_information"),
+                city,
+                objective.getId(),
+                "Contrato",
+                Integer.parseInt(input.get("state_change")),
+                1,
+                Hierarchy.DATE_FORMAT.parse(input.get("startDate")),
+                Hierarchy.DATE_FORMAT.parse(input.get("newDate")),
+                false);
         notificationRepository.save(notification);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
@@ -129,10 +147,10 @@ public class ObjectiveController{
     public ResponseEntity suspendContract(@RequestBody Map<String,String> input, @PathVariable(value = "id") Integer id) throws ParseException {
         if (input == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
 
-        if (input.get("state_change") == "")  return HierarchyController.customMessage("El nuevo estado de contrato es requerido", HttpStatus.BAD_REQUEST);
+        if (input.get("state_change").isEmpty())  return HierarchyController.customMessage("El nuevo estado de contrato es requerido", HttpStatus.BAD_REQUEST);
         Optional<Objective> objectiveOptional = repository.findById(id);
         Objective objective = objectiveOptional.get();
-        if (input.get("state_change") == "2"){ //contrato suspendido temporalmente
+        if (input.get("state_change").equals("2")){ //contrato suspendido temporalmente
             if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
 
 
@@ -148,7 +166,7 @@ public class ObjectiveController{
             annexesRepository.save(annexes);
         }
 
-        if (input.get("state_change") == "3"){ //contrato suspendido permanente
+        if (input.get("state_change").equals("3")){ //contrato suspendido permanente
             // if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
 
             if (!objectiveOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
@@ -161,7 +179,7 @@ public class ObjectiveController{
             annexesRepository.save(annexes);
         }
 
-        if (input.get("state_change") == "1"){ //reinicio de contrato
+        if (input.get("state_change").equals("1")){ //reinicio de contrato
             if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
 
 
@@ -186,7 +204,7 @@ public class ObjectiveController{
             //objeto de atributo valor
         }
 
-        if (input.get("state_change") == "0"){ //eliminacion de contrato
+        if (input.get("state_change").equals("0")){ //eliminacion de contrato
             //if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
 
 
@@ -222,7 +240,7 @@ public class ObjectiveController{
 
 
        // if (input.get("notify_control_boss") != "0"){ //rechazo de eliminacion de contrato
-            if (input.get("startDate" ) == "" || input.get("newDate") == "") return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
+            if (input.get("startDate" ).isEmpty() || input.get("newDate").isEmpty()) return HierarchyController.customMessage("Fecha de inicio y fecha final son requeridos", HttpStatus.BAD_REQUEST);
             User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
             if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
             int city = 0;

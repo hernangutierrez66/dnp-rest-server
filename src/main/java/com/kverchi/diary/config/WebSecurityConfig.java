@@ -39,8 +39,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 .and()
                 .authorizeRequests()
-                .antMatchers("/user/**", "/hierarchy**/**", "/objective**/**").permitAll()
-                .anyRequest().authenticated()
+                //.antMatchers("/user/**", "/hierarchy**/**", "/objective**/**").permitAll()
+                .anyRequest().permitAll()
 
                 .and()
                 .cors().configurationSource(corsConfigurationSource())

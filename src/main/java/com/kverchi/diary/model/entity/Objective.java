@@ -36,7 +36,7 @@ public class Objective extends NamedEntityModel implements Serializable {
     private int actualValue;
 
     @JsonIgnore
-    @ManyToMany(cascade = {CascadeType.ALL}, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "objetivo_jerarquia",
             joinColumns = {@JoinColumn(name = "objetivoid")},
