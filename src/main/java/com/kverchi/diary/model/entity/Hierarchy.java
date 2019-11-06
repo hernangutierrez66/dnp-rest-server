@@ -33,6 +33,10 @@ public class Hierarchy extends NamedEntityModel implements Serializable {
     private Period period;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userid")
+    private User userid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "jerarquia_padre_id")
     private Hierarchy parent;
 

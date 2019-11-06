@@ -1,19 +1,30 @@
 package com.kverchi.diary.controller;
 
 import com.kverchi.diary.model.entity.Hierarchy;
+import com.kverchi.diary.model.entity.LogActivity;
+import com.kverchi.diary.model.entity.Objective;
+import com.kverchi.diary.model.entity.User;
 import com.kverchi.diary.repository.HierarchyRepository;
 import com.kverchi.diary.repository.HierarchyTypeRepository;
 
 
+import com.kverchi.diary.repository.LogActivityRepository;
+import com.kverchi.diary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+import java.text.ParseException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +39,10 @@ public class HierarchyController extends ValidatedController {
 
     private final HierarchyTypeRepository hierarchyTypeRepository;
 
+    private final LogActivityRepository logActivityRepository;
+
+    private final UserRepository userRepository;
+
     public static final String SUCCESFUL_CREATION = "Creación Exitosa";
 
     public static final String SUCCESFUL_UPDATE = "Actualización Exitosa";
@@ -36,18 +51,35 @@ public class HierarchyController extends ValidatedController {
 
     public static final String NOT_FOUND = "No se encontró el elemento";
 
+
     @Autowired
-    public HierarchyController(HierarchyRepository repository, HierarchyTypeRepository hierarchyTypeRepository) {
+    public HierarchyController(HierarchyRepository repository, HierarchyTypeRepository hierarchyTypeRepository,
+                               LogActivityRepository logActivityRepository,
+                               UserRepository userRepository) {
         this.repository = repository;
         this.hierarchyTypeRepository = hierarchyTypeRepository;
+        this.logActivityRepository = logActivityRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping()
-    public ResponseEntity createPlan(@Valid @RequestBody Hierarchy hierarchy, @RequestParam(required = false) Integer parentId, @RequestParam Integer hierarchyType) {
-        if (hierarchy == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        if (hierarchyType != 1) hierarchy.setParent(repository.getOne(parentId));
-        hierarchy.setType(hierarchyTypeRepository.getOne(hierarchyType));
-        repository.save(hierarchy);
+    public ResponseEntity createPlan(@Valid @RequestBody Map<String, String> input, @RequestParam(required = false) Integer parentId, @RequestParam Integer hierarchyType) {
+        Hierarchy hierarchy = new Hierarchy();
+        try {
+            if (input.get("userid").isEmpty() || input.get("name").isEmpty() || input.get("periodoid").isEmpty() || hierarchyType == null) HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+            hierarchy.setStartDate(Hierarchy.DATE_FORMAT.parse(input.get("startDate")));
+            hierarchy.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("endDate")));
+            hierarchy.setOpen(true);
+            if (hierarchyType != 1) hierarchy.setParent(repository.getOne(parentId));
+            hierarchy.setType(hierarchyTypeRepository.getOne(hierarchyType));
+            hierarchy.setUserid(userRepository.getOne(Integer.parseInt(input.get("userid"))));
+            repository.save(hierarchy);
+            LogActivity logActivity = new LogActivity("Hierarchy", hierarchy.getUserid().getUserId(), "Crear", hierarchy.getUserid().getMunicipality().getId(), ZonedDateTime.now());
+            logActivityRepository.save(logActivity);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        //LogActivity logActivity = new LogActivity("Hierarchy")
         return customMessage(SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
