@@ -11,5 +11,5 @@ import java.util.List;
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Role findByRole(String name);
 
-    List<Role> findByRoleIsNotLike(String name, String name2);
+    List<Role> findByRoleIsNotLikeAndRoleIsNotLike(String name, String name2);
 }

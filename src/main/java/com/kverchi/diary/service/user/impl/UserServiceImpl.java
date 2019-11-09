@@ -323,6 +323,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Role> getAllRoles(){
-       return roleRepository.findByRoleIsNotLike("ROLE_WEBMASTER", "ROLE_ADMIN");
+       return roleRepository.findByRoleIsNotLikeAndRoleIsNotLike("ROLE_WEBMASTER", "ROLE_ADMIN");
+       //return roleRepository.findAll();
     }
 }
