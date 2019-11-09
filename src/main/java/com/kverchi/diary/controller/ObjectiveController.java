@@ -41,6 +41,10 @@ public class ObjectiveController{
 
     private final AttributeValueRepository attributeValueRepository;
 
+    private final IndicatorRepository indicatorRepository;
+
+    private final LogActivityRepository logActivityRepository;
+
     @Autowired
     public ObjectiveController(ObjectiveRepository repository, HierarchyRepository hierarchyRepository,
                                TraceChangeValueRepository traceChangeValueRepository, AnnexesRepository annexesRepository,
@@ -48,7 +52,8 @@ public class ObjectiveController{
                                MunicipalityRepository municipalityRepository,
                                AttributeDefinitionRepository attributeDefinitionRepository,
                                AttributeDefinitionObjectiveTypeRepository attributeDefinitionObjectiveTypeRepository,
-                               ObjectiveTypeRepository objectiveTypeRepository, AttributeValueRepository attributeValueRepository) {
+                               ObjectiveTypeRepository objectiveTypeRepository, AttributeValueRepository attributeValueRepository,
+                               LogActivityRepository logActivityRepository, IndicatorRepository indicatorRepository) {
         this.repository = repository;
         this.hierarchyRepository = hierarchyRepository;
         this.traceChangeValueRepository = traceChangeValueRepository;
@@ -60,6 +65,8 @@ public class ObjectiveController{
         this.attributeDefinitionObjectiveTypeRepository = attributeDefinitionObjectiveTypeRepository;
         this.objectiveTypeRepository = objectiveTypeRepository;
         this.attributeValueRepository = attributeValueRepository;
+        this.indicatorRepository = indicatorRepository;
+        this.logActivityRepository = logActivityRepository;
     }
 
     @GetMapping(value = "/{id}")
@@ -73,15 +80,41 @@ public class ObjectiveController{
     }
 
     @PostMapping()
-    public ResponseEntity createObjective(@Valid @RequestBody Objective objective, @RequestParam(required = false) Integer parentId) {
-        if (objective == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        if (parentId != null){
-            Hierarchy hierarchy = hierarchyRepository.getOne(parentId);
-            objective.addObjective(hierarchy);
-            hierarchy.addObjective(objective);
-            hierarchyRepository.save(hierarchy);
+    public ResponseEntity createObjective(@Valid @RequestBody Map<String,String> input, @RequestParam(required = false) Integer parentId) {
+        if (input == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
+        if (input.get("name").isEmpty() || input.get("description").isEmpty() || input.get("expectedValue").isEmpty() || input.get("objectiveType").isEmpty() || input.get("indicator").isEmpty()) HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        Objective objective = new Objective();
+        try {
+            objective.setState(1);
+            objective.setName(input.get("name"));
+            objective.setStartDate(Hierarchy.DATE_FORMAT.parse(input.get("startDate")));
+            objective.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("endDate")));
+            objective.setDescription(input.get("description"));
+            objective.setExpectedValue(Integer.parseInt(input.get("expectedValue")));
+            objective.setActualValue(Integer.parseInt(input.get("actualValue")));
+            objective.setObjectiveType(objectiveTypeRepository.getOne(Integer.parseInt(input.get("objectiveType"))));
+            objective.setIndicator(indicatorRepository.getOne(Integer.parseInt(input.get("indicator"))));
+            if (parentId != null){
+                Hierarchy hierarchy = hierarchyRepository.getOne(parentId);
+                objective.addObjective(hierarchy);
+                hierarchy.addObjective(objective);
+                hierarchyRepository.save(hierarchy);
+            }
+            repository.save(objective);
+
+            User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+            if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+            int city = 0;
+            if (user.getMunicipality() != null){
+                city = user.getMunicipality().getId();
+            }
+            int userid = user.getUserId();
+            LogActivity logActivity = new LogActivity("Objective", userid, "Crear", city, ZonedDateTime.now());
+            logActivityRepository.save(logActivity);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
-        repository.save(objective);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
@@ -97,6 +130,16 @@ public class ObjectiveController{
         TraceChangeValue  traceChangeValue = new TraceChangeValue(objective, Integer.parseInt(input.get("newValue")), ZonedDateTime.now(), 1, ZonedDateTime.now(), null);
         traceChangeValueRepository.save(traceChangeValue);
 
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Objective", userid, "Actualizar progreso", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
 
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
@@ -140,6 +183,9 @@ public class ObjectiveController{
                 Hierarchy.DATE_FORMAT.parse(input.get("newDate")),
                 false);
         notificationRepository.save(notification);
+
+        LogActivity logActivity = new LogActivity("Objective", userid, "Update", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
@@ -227,6 +273,17 @@ public class ObjectiveController{
         notification.setState(0);
         notificationRepository.save(notification);
 
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Objective", userid, "Actualizar, suspender", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
@@ -265,6 +322,12 @@ public class ObjectiveController{
         notification.setState(0);
         notificationRepository.save(notification1);
 
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Objective", userid, "Actualizar, negar eliminacion", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
@@ -275,6 +338,17 @@ public class ObjectiveController{
         AttributeDefinition attributeDefinition = new AttributeDefinition(input.get("nombre"), input.get("descripcion"), Integer.parseInt(input.get("tipo")), 1);
         attributeDefinitionRepository.save(attributeDefinition);
 
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Attribute definition", userid, "Crear", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
@@ -303,6 +377,17 @@ public class ObjectiveController{
         attributeDefinitionObjectiveType.setObjectiveType(optionalObjectiveType.get());
         attributeDefinitionObjectiveTypeRepository.save(attributeDefinitionObjectiveType);
 
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Pivot attribute definition Objective type", userid, "Crear", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 

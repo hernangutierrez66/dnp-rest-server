@@ -1,9 +1,14 @@
 package com.kverchi.diary.controller;
 
 import com.kverchi.diary.model.entity.Indicator;
+import com.kverchi.diary.model.entity.IndicatorOrientation;
+import com.kverchi.diary.model.entity.LogActivity;
+import com.kverchi.diary.model.entity.User;
 import com.kverchi.diary.repository.IndicatorOrientationRepository;
 import com.kverchi.diary.repository.IndicatorRepository;
 
+import com.kverchi.diary.repository.LogActivityRepository;
+import com.kverchi.diary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
@@ -13,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.text.ParseException;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,11 +29,15 @@ public class IndicatorController extends ValidatedController {
 
     private final IndicatorRepository indicatorRepository;
     private final IndicatorOrientationRepository indicatorOrientationRepository;
+    private final UserRepository userRepository;
+    private final LogActivityRepository logActivityRepository;
 
     @Autowired
-    public IndicatorController(IndicatorRepository indicatorRepository, IndicatorOrientationRepository indicatorOrientationRepository) {
+    public IndicatorController(IndicatorRepository indicatorRepository, UserRepository userRepository, LogActivityRepository logActivityRepository,IndicatorOrientationRepository indicatorOrientationRepository) {
         this.indicatorRepository = indicatorRepository;
         this.indicatorOrientationRepository = indicatorOrientationRepository;
+        this.userRepository = userRepository;
+        this.logActivityRepository = logActivityRepository;
     }
 
     @GetMapping(value = "/all")
@@ -44,6 +54,19 @@ public class IndicatorController extends ValidatedController {
         indicatorNuevo.setUnity(Integer.parseInt(input.get("unity")));
         indicatorNuevo.setIndicatorOrientation(indicatorOrientationRepository.getOne(Integer.parseInt(input.get("orientation_indicatorid"))));
         indicatorRepository.save(indicatorNuevo);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Indicator", userid, "Crear", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
 
     }
@@ -54,23 +77,53 @@ public class IndicatorController extends ValidatedController {
     }
 
     @PutMapping(value = "/update/{id}")
-    public ResponseEntity updateIndicator(@RequestBody Indicator indicator, @PathVariable(value = "id") Integer id) throws ParseException {
-        if (indicator == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
+    public ResponseEntity updateIndicator(@RequestBody Map<String, String> input, @PathVariable(value = "id") Integer id) throws ParseException {
+        if (input == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
         Optional<Indicator> indicatorOptional = indicatorRepository.findById(id);
         if (!indicatorOptional.isPresent()) return new ResponseEntity(HttpStatus.NOT_FOUND);
         Indicator indicator1 = indicatorOptional.get();
 
-        indicator1.setName(indicator.getName());
-        indicator1.setUnity(indicator.getUnity());
-        indicator1.setIndicatorOrientation(indicator.getIndicatorOrientation());
+        indicator1.setName(input.get("name"));
+        indicator1.setUnity(Integer.parseInt(input.get("unity")));
+        if (!input.get("indicatorOrientation").isEmpty()){
+            indicator1.setIndicatorOrientation(indicatorOrientationRepository.getOne(Integer.parseInt(input.get("indicatorOrientation"))));
+        }
         indicatorRepository.save(indicator1);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Indicator", userid, "Actualizar", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_UPDATE, HttpStatus.OK);
     }
 
     @DeleteMapping(value = "/delete/{id}")
-    public ResponseEntity deleteIndicator(@PathVariable(value = "id") Integer id){
+    public ResponseEntity deleteIndicator(@RequestBody Map<String, String> input, @PathVariable(value = "id") Integer id){
         if (id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        indicatorRepository.deleteById(id);
+        //indicatorRepository.deleteById(id);
+        IndicatorOrientation indicatorOrientation = indicatorOrientationRepository.getOne(id);
+        indicatorOrientation.setState(0);
+        indicatorOrientationRepository.save(indicatorOrientation);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Indicator", userid, "Update estado", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_DELETE, HttpStatus.OK);
     }
 

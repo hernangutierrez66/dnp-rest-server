@@ -1,6 +1,7 @@
 package com.kverchi.diary.service.user;
 
 
+import com.kverchi.diary.model.entity.Role;
 import com.kverchi.diary.model.entity.VerificationToken;
 import com.kverchi.diary.service.user.impl.ServiceResponse;
 import com.kverchi.diary.model.entity.User;
@@ -13,6 +14,7 @@ import java.util.Map;
 public interface UserService {
 	ServiceResponse login(User requestUser);
 	ServiceResponse logout();
+	List<Role> getAllRoles();
 	List<User> findAll();
 	ServiceResponse register(Map<String, String> body);
 	void activateAccount(User user);

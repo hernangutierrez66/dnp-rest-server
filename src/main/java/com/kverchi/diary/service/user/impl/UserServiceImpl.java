@@ -320,4 +320,9 @@ public class UserServiceImpl implements UserService {
       PasswordResetToken passwordResetToken = passwordTokenRepository.findByToken(token);
       return passwordResetToken.getUser();
     }
+
+    @Override
+    public List<Role> getAllRoles(){
+       return roleRepository.findByRoleIsNotLike("ROLE_WEBMASTER", "ROLE_ADMIN");
+    }
 }

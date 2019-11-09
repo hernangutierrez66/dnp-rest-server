@@ -157,6 +157,8 @@ public class HierarchyController extends ValidatedController {
             Hierarchy hierarchy = repository.findById(id).orElseThrow(EntityNotFoundException::new);
             hierarchy.setOpen(newStatus);
             repository.save(hierarchy);
+            LogActivity logActivity = new LogActivity("Hierarchy", hierarchy.getUserid().getUserId(), "Actualizar", hierarchy.getUserid().getMunicipality().getId(), ZonedDateTime.now());
+            logActivityRepository.save(logActivity);
             return customMessage("Modificación exitosa", HttpStatus.OK);
         } catch (EntityNotFoundException e) {
             return customMessage(NOT_FOUND, HttpStatus.NOT_FOUND);

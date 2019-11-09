@@ -35,6 +35,9 @@ public class Objective extends NamedEntityModel implements Serializable {
     @Column(name = "cantidad_actual")
     private int actualValue;
 
+    @Column(name = "user_id")
+    private int userId;
+
     @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
