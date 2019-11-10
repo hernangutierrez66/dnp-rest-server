@@ -2,6 +2,7 @@ package com.kverchi.diary.model.entity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -15,7 +16,6 @@ import java.util.List;
 @Entity
 @Table(name="jerarquia")
 @Data
-@EqualsAndHashCode(callSuper = true)
 public class Hierarchy extends NamedEntityModel implements Serializable {
 
     public static final DateFormat DATE_FORMAT= new SimpleDateFormat("yyyy-mm-dd");
@@ -28,11 +28,11 @@ public class Hierarchy extends NamedEntityModel implements Serializable {
     @Temporal(TemporalType.DATE)
     private Date endDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "periodoid")
     private Period period;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "userid")
     private User userid;
 
@@ -40,7 +40,7 @@ public class Hierarchy extends NamedEntityModel implements Serializable {
     @JoinColumn(name = "jerarquia_padre_id")
     private Hierarchy parent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "jerarquia_id")
     private HierarchyType type;
 
@@ -49,6 +49,9 @@ public class Hierarchy extends NamedEntityModel implements Serializable {
 
     @ManyToMany(mappedBy = "hierarchies", fetch = FetchType.LAZY)
     private List<Responsible> responsibles;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "hierarchy")
+    private List<SemaphoreRange> semaphoreRanges;
 
     @Column(name = "is_open")
     private boolean open = true;

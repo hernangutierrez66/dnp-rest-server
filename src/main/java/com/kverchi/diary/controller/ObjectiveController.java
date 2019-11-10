@@ -82,7 +82,7 @@ public class ObjectiveController{
     @PostMapping()
     public ResponseEntity createObjective(@Valid @RequestBody Map<String,String> input, @RequestParam(required = false) Integer parentId) {
         if (input == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        if (input.get("name").isEmpty() || input.get("description").isEmpty() || input.get("expectedValue").isEmpty() || input.get("objectiveType").isEmpty() || input.get("indicator").isEmpty()) HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        if (input.get("name").isEmpty() || input.get("description").isEmpty() || input.get("expectedValue").isEmpty() || input.get("objectiveType").isEmpty() || input.get("indicator").isEmpty()) return HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
         Objective objective = new Objective();
         try {
             objective.setState(1);
@@ -94,6 +94,8 @@ public class ObjectiveController{
             objective.setActualValue(Integer.parseInt(input.get("actualValue")));
             objective.setObjectiveType(objectiveTypeRepository.getOne(Integer.parseInt(input.get("objectiveType"))));
             objective.setIndicator(indicatorRepository.getOne(Integer.parseInt(input.get("indicator"))));
+            objective.setUserId(Integer.parseInt(input.get("user_id")));
+            objective.setParent(repository.getOne(Integer.parseInt(input.get("parent"))));
             if (parentId != null){
                 Hierarchy hierarchy = hierarchyRepository.getOne(parentId);
                 objective.addObjective(hierarchy);

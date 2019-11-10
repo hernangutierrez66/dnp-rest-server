@@ -24,7 +24,7 @@ public class SemaphoreRange extends NamedEntityModel implements Serializable {
     @NotNull(message = "Semaphore needs an end range")
     private int end;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "linea_baseid")
     private Hierarchy hierarchy;
 

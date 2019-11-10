@@ -26,7 +26,10 @@ public class HierarchyType extends NamedEntityModel implements Serializable {
     @JoinColumn(name = "tipo_responsableid")
     private ResponsibleType responsibleType;
 
-    @ManyToMany(mappedBy = "hierarchyTypes", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy="type")
+    private List<Hierarchy> hierarchies;
+
+    @ManyToMany(mappedBy = "hierarchyTypes")
     private List<ObjectiveType> objectiveTypes;
 
     @Column(name = "state")
@@ -36,4 +39,5 @@ public class HierarchyType extends NamedEntityModel implements Serializable {
         if (objectiveTypes == null) objectiveTypes = new ArrayList<>();
         objectiveTypes.add(objectiveType);
     }
+
 }

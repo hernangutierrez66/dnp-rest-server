@@ -23,17 +23,20 @@ public class SecretariesController {
     private final MunicipalityRepository municipalityRepository;
     private final ResponsibleRepository responsibleRepository;
     private final LogActivityRepository logActivityRepository;
+    private final ResponsibleTypeRepository responsibleTypeRepository;
 
     private final UserRepository userRepository;
 
     @Autowired
     public SecretariesController(DepartmentRepository departmentRepository, MunicipalityRepository municipalityRepository,
-                                 ResponsibleRepository responsibleRepository, LogActivityRepository logActivityRepository, UserRepository userRepository) {
+                                 ResponsibleRepository responsibleRepository, LogActivityRepository logActivityRepository,
+                                 UserRepository userRepository, ResponsibleTypeRepository responsibleTypeRepository) {
         this.departmentRepository = departmentRepository;
         this.municipalityRepository = municipalityRepository;
         this.responsibleRepository = responsibleRepository;
         this.logActivityRepository = logActivityRepository;
         this.userRepository = userRepository;
+        this.responsibleTypeRepository = responsibleTypeRepository;
     }
 
     @GetMapping(value = "/departments")
@@ -64,6 +67,11 @@ public class SecretariesController {
     @GetMapping(value = "/responsible/{id}")
     public ResponseEntity getResponsible(@PathVariable(value = "id") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(responsibleRepository.findById(id));
+    }
+
+    @GetMapping(value = "/responsibleType/all")
+    public ResponseEntity getResponsibleTypes(@PathVariable(value = "id") Integer id) {
+        return ResponseEntity.status(HttpStatus.OK).body(responsibleTypeRepository.findAll());
     }
 
     @PostMapping(value = "/department")

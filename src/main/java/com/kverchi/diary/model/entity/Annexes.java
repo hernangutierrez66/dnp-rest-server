@@ -22,7 +22,7 @@ public class Annexes extends EntityModel implements Serializable {
 
         public static final DateFormat DATE_FORMAT= new SimpleDateFormat("yyyy-mm-dd");
 
-        @ManyToOne(fetch = FetchType.LAZY)
+        @ManyToOne(fetch = FetchType.EAGER)
         @JoinColumn(name = "trace_id")
         private TraceChangeValue traceChangeValue;
 

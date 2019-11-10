@@ -1,15 +1,9 @@
 package com.kverchi.diary.controller;
 
-import com.kverchi.diary.model.entity.Hierarchy;
-import com.kverchi.diary.model.entity.LogActivity;
-import com.kverchi.diary.model.entity.Objective;
-import com.kverchi.diary.model.entity.User;
-import com.kverchi.diary.repository.HierarchyRepository;
-import com.kverchi.diary.repository.HierarchyTypeRepository;
+import com.kverchi.diary.model.entity.*;
+import com.kverchi.diary.repository.*;
 
 
-import com.kverchi.diary.repository.LogActivityRepository;
-import com.kverchi.diary.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
@@ -43,6 +37,10 @@ public class HierarchyController extends ValidatedController {
 
     private final UserRepository userRepository;
 
+    private final PeriodRepository periodRepository;
+
+    private final SemaphoreRangeRepository semaphoreRangeRepository;
+
     public static final String SUCCESFUL_CREATION = "Creación Exitosa";
 
     public static final String SUCCESFUL_UPDATE = "Actualización Exitosa";
@@ -55,26 +53,39 @@ public class HierarchyController extends ValidatedController {
     @Autowired
     public HierarchyController(HierarchyRepository repository, HierarchyTypeRepository hierarchyTypeRepository,
                                LogActivityRepository logActivityRepository,
-                               UserRepository userRepository) {
+                               UserRepository userRepository, PeriodRepository periodRepository, SemaphoreRangeRepository semaphoreRangeRepository) {
         this.repository = repository;
         this.hierarchyTypeRepository = hierarchyTypeRepository;
         this.logActivityRepository = logActivityRepository;
         this.userRepository = userRepository;
+        this.periodRepository = periodRepository;
+        this.semaphoreRangeRepository = semaphoreRangeRepository;
     }
 
     @PostMapping()
     public ResponseEntity createPlan(@Valid @RequestBody Map<String, String> input, @RequestParam(required = false) Integer parentId, @RequestParam Integer hierarchyType) {
         Hierarchy hierarchy = new Hierarchy();
         try {
-            if (input.get("userid").isEmpty() || input.get("name").isEmpty() || input.get("periodoid").isEmpty() || hierarchyType == null) HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+            if (input.get("userid").isEmpty() || input.get("name").isEmpty() || input.get("periodoid").isEmpty() || hierarchyType == null) return HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
             hierarchy.setStartDate(Hierarchy.DATE_FORMAT.parse(input.get("startDate")));
             hierarchy.setEndDate(Hierarchy.DATE_FORMAT.parse(input.get("endDate")));
+            hierarchy.setName(input.get("name"));
             hierarchy.setOpen(true);
             if (hierarchyType != 1) hierarchy.setParent(repository.getOne(parentId));
             hierarchy.setType(hierarchyTypeRepository.getOne(hierarchyType));
             hierarchy.setUserid(userRepository.getOne(Integer.parseInt(input.get("userid"))));
+            hierarchy.setPeriod(periodRepository.getOne(Integer.parseInt(input.get("periodoid"))));
             repository.save(hierarchy);
-            LogActivity logActivity = new LogActivity("Hierarchy", hierarchy.getUserid().getUserId(), "Crear", hierarchy.getUserid().getMunicipality().getId(), ZonedDateTime.now());
+
+            User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("userid")), true);
+            if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+            int city = 0;
+            if (user.getMunicipality() != null){
+                city = user.getMunicipality().getId();
+            }
+
+            int userid = user.getUserId();
+            LogActivity logActivity = new LogActivity("Hierarchy", userid, "Crear", city, ZonedDateTime.now());
             logActivityRepository.save(logActivity);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -165,6 +176,120 @@ public class HierarchyController extends ValidatedController {
         }
     }
 
+    @PostMapping (value = "/period/create")
+    public ResponseEntity createPeriod(@RequestBody Map<String, String> input){
+        if (input.get("name").isEmpty() || input == null) return HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        Period period = new Period();
+
+        period.setName(input.get("name"));
+        period.setDuration(Integer.parseInt(input.get("duration")));
+        period.setState(1);
+        periodRepository.save(period);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("period", userid, "Crear", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+        return customMessage("Creación exitosa", HttpStatus.OK);
+    }
+
+    @GetMapping (value = "/period/all")
+    public ResponseEntity getPeriod(){
+        return ResponseEntity.status(HttpStatus.OK).body(periodRepository.findAll());
+    }
+
+    @GetMapping (value = "/period/{id}")
+    public ResponseEntity updatePeriod(@RequestBody Map<String, String> input, @PathVariable(value = "id") Integer id){
+        if (id == null || input == null) return customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        Period period = periodRepository.getOne(id);
+        period.setName(input.get("name"));
+        period.setDuration(Integer.parseInt("duration"));
+        periodRepository.save(period);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("period", userid, "Actualizar", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+        return customMessage("Modificación exitosa", HttpStatus.OK);
+    }
+
+    @PostMapping (value = "/semaphore/create")
+    public ResponseEntity createSemaphore(@RequestBody Map<String, String> input){
+        if (input.get("linea_baseid").isEmpty() || input == null) return HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        SemaphoreRange semaphoreRange = new SemaphoreRange();
+
+        semaphoreRange.setName(input.get("name"));
+        semaphoreRange.setColor(Integer.parseInt(input.get("color")));
+        semaphoreRange.setStart(Integer.parseInt(input.get("start")));
+        semaphoreRange.setEnd(Integer.parseInt(input.get("end")));
+        semaphoreRange.setHierarchy(repository.getOne(Integer.parseInt(input.get("linea_baseid"))));
+        semaphoreRange.setState(1);
+        semaphoreRangeRepository.save(semaphoreRange);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Semaphore range", userid, "Crear", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+        return customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
+    }
+
+    @GetMapping (value = "/semaphore/all")
+    public ResponseEntity getSemaphore(){
+        return ResponseEntity.status(HttpStatus.OK).body(semaphoreRangeRepository.findAll());
+    }
+
+    @GetMapping (value = "/semaphore/{id}/plan")
+    public ResponseEntity getSemaphoreByPlan(@PathVariable(value = "id") Integer id){
+        return ResponseEntity.status(HttpStatus.OK).body(semaphoreRangeRepository.findByHierarchy(repository.getOne(id)));
+    }
+
+    @GetMapping (value = "/semaphore/{id}")
+    public ResponseEntity updateSemaphore(@RequestBody Map<String, String> input, @PathVariable(value = "id") Integer id){
+        if (id == null || input == null) return HierarchyController.customMessage("Completar los campos requeridos", HttpStatus.BAD_REQUEST);
+        SemaphoreRange semaphoreRange = new SemaphoreRange();
+
+        semaphoreRange.setName(input.get("name"));
+        semaphoreRange.setColor(Integer.parseInt(input.get("color")));
+        semaphoreRange.setStart(Integer.parseInt(input.get("start")));
+        semaphoreRange.setEnd(Integer.parseInt(input.get("end")));
+        semaphoreRange.setHierarchy(repository.getOne(Integer.parseInt("line_baseid")));
+        semaphoreRange.setState(1);
+        semaphoreRangeRepository.save(semaphoreRange);
+
+        User user = userRepository.findByUserIdAndIsEnabled(Integer.parseInt(input.get("user_id")), true);
+        if (user == null) return HierarchyController.customMessage("Usuario no autorizado", HttpStatus.BAD_REQUEST);
+        int city = 0;
+        if (user.getMunicipality() != null){
+            city = user.getMunicipality().getId();
+        }
+
+        int userid = user.getUserId();
+
+        LogActivity logActivity = new LogActivity("Semaphore range", userid, "Actualizar", city, ZonedDateTime.now());
+        logActivityRepository.save(logActivity);
+        return customMessage(HierarchyController.SUCCESFUL_UPDATE, HttpStatus.OK);
+    }
     static ResponseEntity customMessage(String message, HttpStatus status) {
         Map<String, String> customResponse = new HashMap<>();
         customResponse.put("message", message);

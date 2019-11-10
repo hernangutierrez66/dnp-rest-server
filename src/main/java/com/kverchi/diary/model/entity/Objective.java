@@ -63,7 +63,7 @@ public class Objective extends NamedEntityModel implements Serializable {
     @JoinColumn(name = "objetivo_padre_id")
     private Objective parent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "indicadorid")
     private Indicator indicator;
 }

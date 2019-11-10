@@ -27,7 +27,6 @@ public class LogActivity extends NamedEntityModel implements Serializable {
     private int ciudad;
 
     @Column(name = "created_at")
-    @CreatedDate
     private ZonedDateTime created_at;
 
     public LogActivity(String name, int userId, String accion, int ciudad, ZonedDateTime created_at) {
