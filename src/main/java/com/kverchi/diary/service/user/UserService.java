@@ -46,7 +46,7 @@ public interface UserService {
 		StringBuilder baseUrl = new StringBuilder();
 		baseUrl.append(request.getScheme())
 				.append("://")
-				.append(request.getServerName());
+				.append(request.getRemoteAddr());
 		if((request.getScheme().equals("http") && port != 80) || (request.getScheme().equals("https") && port != 443)) {
 			baseUrl.append(":")
 					.append(port);
