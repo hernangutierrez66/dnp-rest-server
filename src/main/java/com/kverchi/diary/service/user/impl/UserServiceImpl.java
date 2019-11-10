@@ -89,9 +89,12 @@ public class UserServiceImpl implements UserService {
             /*HttpSession session = httpServletRequest.getSession(true);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);*/
 
-           // User user = (User)authentication.getPrincipal();
+            //UserService user = (UserService)authentication.getPrincipal();
             logger.info("Logged in user: {}", authentication.getPrincipal());
-            return new ServiceResponse(HttpStatus.OK, MsgServiceResponse.OK);
+            User user = new User();
+            user = userRepository.findByUsername(requestUser.getUsername());
+
+            return new ServiceResponse(HttpStatus.OK, MsgServiceResponse.OK, user.getUserId());
 
         } catch (BadCredentialsException ex) {
             return new ServiceResponse(HttpStatus.BAD_REQUEST, MsgServiceResponse.NO_USER_WITH_USERNAME_OR_PASSWORD_WRONG);
