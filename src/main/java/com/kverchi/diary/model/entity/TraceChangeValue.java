@@ -44,6 +44,10 @@ public class TraceChangeValue extends EntityModel implements Serializable {
     @LastModifiedDate
     private Date updated_at;
 
+    public TraceChangeValue() {
+        super();
+    }
+
     public TraceChangeValue(Objective objective, int value, ZonedDateTime dateChange, int state, ZonedDateTime created_at, ZonedDateTime updated_at) {
         this.objective = objective;
         this.value = value;

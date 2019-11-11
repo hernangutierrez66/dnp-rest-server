@@ -70,7 +70,7 @@ public class SecretariesController {
     }
 
     @GetMapping(value = "/responsibleType/all")
-    public ResponseEntity getResponsibleTypes(@PathVariable(value = "id") Integer id) {
+    public ResponseEntity getResponsibleTypes() {
         return ResponseEntity.status(HttpStatus.OK).body(responsibleTypeRepository.findAll());
     }
 

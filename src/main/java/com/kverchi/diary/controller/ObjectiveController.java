@@ -191,6 +191,32 @@ public class ObjectiveController{
         return HierarchyController.customMessage(HierarchyController.SUCCESFUL_CREATION, HttpStatus.OK);
     }
 
+    @GetMapping (value = "/{id}/annexes")
+    public ResponseEntity getObjectivesAnnexes (@PathVariable(value = "id") Integer id){
+        if (id == null ) return HierarchyController.customMessage("Id requerido", HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.OK).body(annexesRepository.findByTraceChangeValue(traceChangeValueRepository.getOne(id)));
+    }
+
+    @GetMapping (value = "/{id}/trace")
+    public ResponseEntity getObjectivesTrace (@PathVariable(value = "id") Integer id){
+        if (id == null ) return HierarchyController.customMessage("Id requerido", HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.OK).body(traceChangeValueRepository.findByObjective(repository.getOne(id)));
+    }
+
+    @GetMapping (value = "/notifications/{userid}")
+    public ResponseEntity getNotifications (@PathVariable(value = "userid") Integer id){
+        if (id == null ) return HierarchyController.customMessage("Id requerido", HttpStatus.BAD_REQUEST);
+        User user = userRepository.getOne(id);
+        if (user.getRoles().equals("ROLE_JEFECONTROL")){
+            return ResponseEntity.status(HttpStatus.OK).body(notificationRepository.findByNotifyControlBoss(true));
+        }else if (user.getRoles().equals("ROLE_LIDERSEGUIMIENTO")){
+            return ResponseEntity.status(HttpStatus.OK).body(notificationRepository.findByNotifyControlBoss(false));
+        }else{
+            return ResponseEntity.status(HttpStatus.OK).body(notificationRepository.findAll());
+        }
+
+    }
+
     @PatchMapping(value = "/{id}/contract-state")
     public ResponseEntity suspendContract(@RequestBody Map<String,String> input, @PathVariable(value = "id") Integer id) throws ParseException {
         if (input == null || id == null) return new ResponseEntity(HttpStatus.BAD_REQUEST);
@@ -371,8 +397,8 @@ public class ObjectiveController{
 
         Optional<AttributeDefinition> optionalAttributeDefinition = attributeDefinitionRepository.findById(Integer.parseInt(input.get("atributo_definitionid")));
         Optional<ObjectiveType> optionalObjectiveType = objectiveTypeRepository.findById(Integer.parseInt(input.get("tipo_objetivoid")));
-        if (optionalObjectiveType.isPresent()) return HierarchyController.customMessage("Tipo de objetivo no existe", HttpStatus.BAD_REQUEST);
-        if (optionalAttributeDefinition.isPresent()) return HierarchyController.customMessage("Definicion de atributo no existe", HttpStatus.BAD_REQUEST);
+        if (!optionalObjectiveType.isPresent()) return HierarchyController.customMessage("Tipo de objetivo no existe", HttpStatus.BAD_REQUEST);
+        if (!optionalAttributeDefinition.isPresent()) return HierarchyController.customMessage("Definicion de atributo no existe", HttpStatus.BAD_REQUEST);
         AttributeDefinitionObjectiveType attributeDefinitionObjectiveType = new AttributeDefinitionObjectiveType();
         attributeDefinitionObjectiveType.setState(1);
         attributeDefinitionObjectiveType.setAttributeDefinition(optionalAttributeDefinition.get());

@@ -49,6 +49,10 @@ public class Annexes extends EntityModel implements Serializable {
         @LastModifiedDate
         private ZonedDateTime modifiedDate;
 
+        public Annexes() {
+                super();
+        }
+
         public Annexes(TraceChangeValue traceChangeValue, String description, Date dateStart, Date dateFinal, int state, ZonedDateTime createdDate) {
                 this.traceChangeValue = traceChangeValue;
                 this.description = description;

@@ -4,6 +4,7 @@ package com.kverchi.diary.config;
 import com.google.common.collect.ImmutableList;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +41,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 //.antMatchers("/user/**", "/hierarchy**/**", "/objective**/**").permitAll()
+                //.antMatchers("/hierarchy", "/hierarchy/axis","/hierarchy/program", "/hierarchy/project**/**", "/hierarchy/axis**/**").hasAnyRole("ROLE_GESTOR", "ROLE_WEBMASTER")
+                //.antMatchers("/**/delete/**").hasAnyRole("ROLE_LIDERSEGUIMIENTO", "ROLE_WEBMASTER")
                 .anyRequest().permitAll()
 
                 .and()

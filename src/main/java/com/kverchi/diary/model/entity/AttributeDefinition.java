@@ -26,7 +26,9 @@ public class AttributeDefinition extends NamedEntityModel implements Serializabl
     @Column(name = "state")
     private int state;
 
-
+    public AttributeDefinition() {
+        super();
+    }
 
     public AttributeDefinition(String name, String description, int type, int state) {
         this.name = name;

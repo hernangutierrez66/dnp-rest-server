@@ -16,11 +16,11 @@ public class AttributeDefinitionObjectiveType extends EntityModel implements Ser
 
 
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_objetivoid")
     private ObjectiveType objectiveType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "atributo_definicionid")
     private AttributeDefinition attributeDefinition;
 
