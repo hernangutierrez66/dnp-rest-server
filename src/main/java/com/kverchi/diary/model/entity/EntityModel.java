@@ -11,7 +11,7 @@ public abstract class EntityModel implements Serializable {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue( strategy = GenerationType.AUTO )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer id;
 
 

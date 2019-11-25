@@ -36,6 +36,12 @@ public class DataLoader implements ApplicationListener<ContextRefreshedEvent> {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PeriodRepository periodRepository;
+
+    @Autowired
+    private HierarchyTypeRepository hierarchyTypeRepository;
+
     @Override
     @Transactional
     public void onApplicationEvent(final ContextRefreshedEvent event) {
@@ -43,6 +49,12 @@ public class DataLoader implements ApplicationListener<ContextRefreshedEvent> {
             return;
         }
 
+        Period period = new Period();
+        period.setState(1);
+        period.setDuration(4);
+        period.setName("Periodo uno");
+        period.setId(1);
+        periodRepository.save(period);
 
         Department department = new Department();
         department.setDaneCode(73);
@@ -56,6 +68,26 @@ public class DataLoader implements ApplicationListener<ContextRefreshedEvent> {
         municipality.setState(1);
         municipality.setDepartment(department);
         municipalityRepository.save(municipality);
+
+        HierarchyType hierarchyType = new HierarchyType();
+        hierarchyType.setName("Plan de desarrollo");
+        hierarchyType.setState(1);
+        hierarchyTypeRepository.save(hierarchyType);
+
+        HierarchyType hierarchyType2 = new HierarchyType();
+        hierarchyType2.setName("Pilar");
+        hierarchyType2.setState(1);
+        hierarchyTypeRepository.save(hierarchyType2);
+
+        HierarchyType hierarchyType3 = new HierarchyType();
+        hierarchyType3.setName("Programa");
+        hierarchyType3.setState(1);
+        hierarchyTypeRepository.save(hierarchyType3);
+
+        HierarchyType hierarchyType4 = new HierarchyType();
+        hierarchyType4.setName("Proyecto");
+        hierarchyType4.setState(1);
+        hierarchyTypeRepository.save(hierarchyType4);
 
         // == create initial privileges
         final Privilege superPrivilege = createPrivilegeIfNotFound("SUPER_PRIVILEGE");
